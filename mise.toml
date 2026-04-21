@@ -1,0 +1,10 @@
+[env]
+TERM = 'xterm-256color'
+
+[tools]
+node = "24.15.0"
+
+[settings]
+experimental = true
+lockfile = true
+pin = true

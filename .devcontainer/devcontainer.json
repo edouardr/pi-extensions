@@ -1,0 +1,28 @@
+{
+  "build": {
+    "context": "..",
+    "dockerfile": "Dockerfile"
+  },
+  "postCreateCommand": "chmod +x ${containerWorkspaceFolder}/scripts/setup && ${containerWorkspaceFolder}/scripts/setup",
+  "features": {},
+  "mounts": [
+    "source=${localEnv:GPG_AGENT_SOCKET},target=/home/vscode/.gnupg/S.gpg-agent,type=bind",
+    "source=${localEnv:HOME}/.local/share/mise,target=/home/vscode/.local/share/mise,type=bind",
+    "source=${localEnv:HOME}/.cache/mise,target=/home/vscode/.cache/mise,type=bind",
+    "source=${localEnv:HOME}/.local/state/mise,target=/home/vscode/.local/state/mise,type=bind",
+    "source=${localEnv:HOME}/.gnupg/pubkey.asc,target=/tmp/pubkey.asc,type=bind",
+    "source=${localEnv:HOME}/.gnupg/ownertrust.asc,target=/tmp/ownertrust.asc,type=bind"
+  ],
+  "forwardPorts": [5173, 24678],
+  "containerEnv": {
+    "LANGS": "json,typescript,java,rust,docker,helm,markdown,sql",
+    "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}",
+    "AZURE_OPENAI_RESOURCE_NAME": "openai-service-internal",
+    "AZURE_OPENAI_API_KEY": "${localEnv:AZURE_OPENAI_API_KEY}",
+    "HOST_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
+    "HOST_HOME": "${localEnv:HOME}",
+    "MISE_DATA_DIR": "/home/vscode/.local/share/mise",
+    "MISE_STATE_DIR": "/home/vscode/.local/state/mise",
+    "MISE_CACHE_DIR": "/home/vscode/.cache/mise"
+  }
+}
