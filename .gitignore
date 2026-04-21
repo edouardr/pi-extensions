@@ -1,5 +1,25 @@
+# dependencies
 node_modules/
-dist/
+
+# build
+/dist/
 *.tsbuildinfo
+
+# caches
+.cache/
+.eslintcache
+.pnpm-store/
+
+# logs
+*.log
+
+# env
+.env
+.env.*
+!.env.example
+
+# misc
 .DS_Store
+.idea/
+.vscode/
 .pi/

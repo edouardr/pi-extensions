@@ -13,7 +13,6 @@
     "source=${localEnv:HOME}/.gnupg/pubkey.asc,target=/tmp/pubkey.asc,type=bind",
     "source=${localEnv:HOME}/.gnupg/ownertrust.asc,target=/tmp/ownertrust.asc,type=bind"
   ],
-  "forwardPorts": [5173, 24678],
   "containerEnv": {
     "LANGS": "json,typescript,java,rust,docker,helm,markdown,sql",
     "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}",
