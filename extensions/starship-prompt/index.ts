@@ -21,6 +21,7 @@ type FooterMode = "default" | "compact" | "off";
 
 const STATUS_KEY = "starship-prompt";
 const WIDGET_KEY = "starship-prompt";
+const PI_SYMBOL = "π";
 let inlinePromptLine: string | null = null;
 let inlineBorder: InlineBorder = "none";
 let footerMode: FooterMode | null = null;
@@ -69,6 +70,7 @@ function buildEnv(): Record<string, string> {
     ...process.env,
     STARSHIP_SHELL: process.env.STARSHIP_SHELL ?? "bash",
     STARSHIP_SESSION_KEY: process.env.STARSHIP_SESSION_KEY ?? "pi",
+    PI_STARSHIP: "1",
     COLUMNS: String(columns),
   };
 
@@ -216,11 +218,11 @@ class StarshipInlineEditor extends CustomEditor {
 
     const editorLines = editorFrame.slice(1, -1);
 
-    if (this.promptLine) {
+    if (this.promptLine && editorLines.length > 0) {
       const cursorIndex = editorLines.findIndex((line) => line.includes(CURSOR_MARKER));
-      const contentIndex = cursorIndex >= 0 ? cursorIndex : Math.max(0, editorLines.length - 1);
-      editorLines[contentIndex] = injectPrompt(
-        editorLines[contentIndex] ?? "",
+      const promptIndex = cursorIndex === 0 && editorLines.length > 1 ? editorLines.length - 1 : 0;
+      editorLines[promptIndex] = injectPrompt(
+        editorLines[promptIndex] ?? "",
         this.promptLine,
         innerWidth
       );
@@ -259,7 +261,9 @@ function applyPrompt(
   }
 
   const lines = prompt.length > 0 ? prompt.split(/\r?\n/) : ["(starship prompt empty)"];
-  const statusLine = lines[lines.length - 1] ?? "";
+  const statusIndex = lines.length - 1;
+  lines[statusIndex] = `${PI_SYMBOL} ${lines[statusIndex] ?? ""}`;
+  const statusLine = lines[statusIndex] ?? "";
 
   if (mode === "inline") {
     const promptLine = statusLine;
@@ -408,7 +412,10 @@ export default function (pi: ExtensionAPI) {
     setFooterMode(getFooterMode(), ctx);
 
     try {
-      const prompt = await fetchPrompt(pi, ctx, signal);
+      const prompt = await fetchPrompt(pi, ctx);
+      if (!prompt && lastPrompt !== null && lastError === null) {
+        return;
+      }
       if (prompt !== lastPrompt || lastError !== null) {
         applyPrompt(ctx, prompt, mode, placement, editor, setEditor);
       }
@@ -416,6 +423,11 @@ export default function (pi: ExtensionAPI) {
       lastError = null;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
+      const aborted =
+        signal?.aborted ||
+        (error instanceof Error &&
+          (error.name === "AbortError" || /operation aborted/i.test(error.message)));
+      if (aborted) return;
       if (message !== lastError || lastPrompt !== null) {
         applyError(ctx, message, mode, placement, editor, setEditor);
       }
@@ -435,7 +447,8 @@ export default function (pi: ExtensionAPI) {
   });
 
   pi.on("turn_end", async (_event, ctx) => {
-    await update(ctx, ctx.signal);
+    const signal = ctx.signal?.aborted ? undefined : ctx.signal;
+    await update(ctx, signal);
   });
 
   pi.on("session_shutdown", async (_event, ctx) => {
